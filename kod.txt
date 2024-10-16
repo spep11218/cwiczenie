@@ -1,0 +1,92 @@
+#include <iostream>
+#include <stack>
+#include <string>
+
+using namespace std;
+
+// Funkcja, która zwraca priorytet operatora
+int getPriority(char op) {
+    if (op == '+' || op == '-')
+        return 1;
+    if (op == '*' || op == '/')
+        return 2;
+    return 0;
+}
+
+// Funkcja, która wykonuje operacje arytmetyczne
+double applyOperation(double a, double b, char op) {
+    switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': return a / b;
+        default: return 0;
+    }
+}
+
+// Funkcja, która oblicza wyrażenie arytmetyczne w formacie infiksowym
+double evaluate(string expression) {
+    stack<double> values;  // Stos do przechowywania liczb
+    stack<char> ops;       // Stos do przechowywania operatorów
+
+    for (int i = 0; i < expression.length(); i++) {
+        // Pomijanie spacji
+        if (expression[i] == ' ')
+            continue;
+
+        // Jeśli napotkano liczbę, wczytujemy ją
+        if (isdigit(expression[i])) {
+            double value = 0;
+            while (i < expression.length() && isdigit(expression[i])) {
+                value = value * 10 + (expression[i] - '0');
+                i++;
+            }
+            values.push(value);
+            i--;  // Cofamy indeks, ponieważ pętla zwiększy go dodatkowo
+        }
+        // Jeśli napotkano nawias otwierający
+        else if (expression[i] == '(') {
+            ops.push(expression[i]);
+        }
+        // Jeśli napotkano nawias zamykający
+        else if (expression[i] == ')') {
+            while (!ops.empty() && ops.top() != '(') {
+                double val2 = values.top(); values.pop();
+                double val1 = values.top(); values.pop();
+                char op = ops.top(); ops.pop();
+                values.push(applyOperation(val1, val2, op));
+            }
+            ops.pop();  // Usuń nawias otwierający '('
+        }
+        // Jeśli napotkano operator
+        else if (expression[i] == '+' || expression[i] == '-' ||
+                 expression[i] == '*' || expression[i] == '/') {
+            while (!ops.empty() && getPriority(ops.top()) >= getPriority(expression[i])) {
+                double val2 = values.top(); values.pop();
+                double val1 = values.top(); values.pop();
+                char op = ops.top(); ops.pop();
+                values.push(applyOperation(val1, val2, op));
+            }
+            ops.push(expression[i]);
+        }
+    }
+
+    // Przetwarzamy pozostałe operatory na stosie
+    while (!ops.empty()) {
+        double val2 = values.top(); values.pop();
+        double val1 = values.top(); values.pop();
+        char op = ops.top(); ops.pop();
+        values.push(applyOperation(val1, val2, op));
+    }
+
+    // Ostateczna wartość to wynik
+    return values.top();
+}
+
+int main() {
+    string expression;
+    cout << "Podaj wyrażenie do obliczenia (możesz używać nawiasów, np. (3+5)*2): ";
+    getline(cin, expression);
+    cout << "Wynik: " << evaluate(expression) << endl;
+    return 0;
+}
