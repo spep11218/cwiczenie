@@ -1,4 +1,4 @@
-Kod kalkulator
+Kod kalkulator1
 #include <iostream>
 #include <stack>
 #include <string>
